@@ -1,5 +1,6 @@
 import serial
 import time
+import rmb_cfg
 """
 pi@raspberrypi ~/roomba $ python
 Python 2.7.3rc2 (default, May  6 2012, 20:02:25)
@@ -30,53 +31,37 @@ motors ['\x8a', '\x04']
 motors ['\x8a', '\x00']
 """
 
-OPCODE = {
-    "start": 128,
-    "safe": 131,
-    "full": 132,
-    "power": 133,
-    "spot": 134,
-    "clean": 135,
-    "max": 136,
-    "drive": 137,
-    "motors": 138,
-    "leds": 139,
-    "song": 140,
-    "play": 141,
-    "sensors": 142
-}
-
-RADIUS = {
-    "turn":
-    {"clockwise": -1,
-     "counterclockwise": 1},
-    "straight": 32768,
-    "max": 2000
-}
-
 
 def u16(num):
+    """
+    convert a number to 16 bit big endian representation
+    """
     ss = hex(int(num) & 0xffff)[2:]
     ss = ("0" * (4 - len(ss))) + ss
     return [chr(int(x, 16)) for x in [ss[:2], ss[2:]]]
 
 
 class Roomba(object):
-    def __init__(self, dev, baudrate=115200, timeout=0.1):
+    def __init__(self, dev, baudrate=115200, timeout=0.1, delay=0.5, verbose=True):
         self.ser = serial.Serial(dev, baudrate=baudrate, timeout=timeout)
+        self.delay = delay
+        self.verbose = verbose
+        self.ser.cmd_start()
+        self.ser.cmd_full()
 
     def __getattr__(self, cmd):
-        if cmd.startswith("cmd_") and cmd[4:] in OPCODE:
+        if cmd.startswith("cmd_") and cmd[4:] in rmb_cfg.OPCODE:
             def icmd(x=None):
-                lcmd = [chr(OPCODE[cmd[4:]])]
+                lcmd = [chr(rmb_cfg.OPCODE[cmd[4:]])]
                 if x is not None:
                     if isinstance(x, (int, long)):
                         lcmd += chr(x)
                     else:
                         lcmd.extend(x)
-                print cmd[4:], lcmd
+                if self.verbose is True:
+                    print cmd[4:], lcmd
                 self.ser.write(lcmd)
-                time.sleep(0.5)
+                time.sleep(self.delay)
             setattr(self, cmd, icmd)
             return icmd
         else:
@@ -89,4 +74,4 @@ class Roomba(object):
         self.drive(0, 0)
 
     def drive_straight(self, velocity):
-        self.drive(velocity, RADIUS["straight"])
+        self.drive(velocity, rmb_cfg.RADIUS["straight"])
