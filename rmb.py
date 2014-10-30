@@ -103,3 +103,16 @@ class Roomba(object):
         ds = self._cmd_("sensors", packet_code)
         sc = rmb_cfg.SCONFIG[packet_code]
         return sc["class"](*struct.unpack(sc["fmt"], ds))
+
+    def exec_script(self, cmds, pause_time=1.0):
+        for cmd in cmds:
+            spl = cmd.split(",")
+            try:
+                fn = getattr(self, spl[0])
+                if len(spl) > 1:
+                    fn([int(i) for i in spl[1:]])
+                else:
+                    fn()
+                time.sleep(pause_time)
+            except AttributeError:
+                print "Cound not execute", cmd
