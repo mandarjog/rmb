@@ -8,6 +8,7 @@ def get_args():
     argp = argparse.ArgumentParser()
     argp.add_argument("cmds", nargs="*")
     argp.add_argument('--dev', default="/dev/ttyUSB0")
+    argp.add_argument('--pause-time', default=2.2, type=float)
     argp.add_argument('--verbose', default=False, action="store_true")
     return argp
 
@@ -21,6 +22,7 @@ def main(argv):
         return -1
 
     rm = rmb.Roomba(args.dev, verbose=args.verbose)
+    return rm.exec_script(args.cmds.split(":"), pause_time=args.pause_time)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
