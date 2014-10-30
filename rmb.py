@@ -38,16 +38,11 @@ def u16(num):
     """
     convert a number to 16 bit big endian representation
     """
-    ss = hex(int(num) & 0xffff)[2:]
-    ss = ("0" * (4 - len(ss))) + ss
-    return [chr(int(x, 16)) for x in [ss[:2], ss[2:]]]
-
-
-def u16_2(num):
-    return struct.pack(">H", num)
+    return struct.pack(">h", num) if num != 32768 else "\x80\x00"
 
 
 class Roomba(object):
+
     """
     Basic SCI abstraction
     """
@@ -109,10 +104,13 @@ class Roomba(object):
             spl = cmd.split(",")
             try:
                 fn = getattr(self, spl[0])
+                print "exec: ", cmd
                 if len(spl) > 1:
-                    fn([int(i) for i in spl[1:]])
+                    ret = fn(*[int(i) for i in spl[1:]])
                 else:
-                    fn()
+                    ret = fn()
+                if ret:
+                    print ret
                 time.sleep(pause_time)
             except AttributeError:
                 print "Cound not execute", cmd
