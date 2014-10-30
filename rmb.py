@@ -2,6 +2,7 @@ import serial
 import time
 import rmb_cfg
 import struct
+import inspect
 
 """
 pi@raspberrypi ~/roomba $ python
@@ -106,7 +107,11 @@ class Roomba(object):
                 fn = getattr(self, spl[0])
                 print "exec: ", cmd
                 if len(spl) > 1:
-                    ret = fn(*[int(i) for i in spl[1:]])
+                    ag = inspect.getargs(fn.func_code)
+                    if len(ag.args) > 1:
+                        ret = fn(*[int(i) for i in spl[1:]])
+                    else:
+                        ret = fn([chr(int(i)) for i in spl[1:]])
                 else:
                     ret = fn()
                 if ret:
