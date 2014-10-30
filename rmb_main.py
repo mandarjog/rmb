@@ -16,7 +16,7 @@ def main(argv):
     argp = get_args()
     args = argp.parse_args(argv)
 
-    if len(args.files) == 0:
+    if len(args.cmds) == 0:
         argp.print_help()
         return -1
 
