@@ -91,7 +91,7 @@ class Roomba(object):
             raise AttributeError()
 
     def drive(self, velocity, radius):
-        return self.cmd_drive(u16(velocity) + u16(radius))
+        return self._cmd_("drive", u16(velocity) + u16(radius))
 
     def drive_stop(self):
         return self.drive(0, 0)
