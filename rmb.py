@@ -100,6 +100,14 @@ class Roomba(object):
         sc = rmb_cfg.SCONFIG[packet_code]
         return sc["class"](*struct.unpack(sc["fmt"], ds))
 
+    def song(self, num, notes, octave_bias=0, default_duration=64):
+        outnotes = song(notes, octave_bias, default_duration)
+        # enforce max length
+        if len(outnotes) > 32:
+            outnotes = outnotes[:32]
+            print "Song truncated"
+        self._cmd_("song", [chr(num), chr(len(outnotes) / 2)] + outnotes)
+
     def exec_script(self, cmds, pause_time=1.0):
         for cmd in cmds:
             spl = cmd.split(",")
@@ -119,3 +127,40 @@ class Roomba(object):
                 time.sleep(pause_time)
             except AttributeError:
                 print "Cound not execute", cmd
+
+
+def song(notes, octave_bias=0, default_duration=64):
+    """
+    C,C,0.5,+C,+C,1.2
+    """
+    if isinstance(notes, str):
+        notes = notes.split(",")
+
+    octavelen = len(rmb_cfg.NOTES)
+
+    outnotes = []
+    for note in notes:
+        if len(outnotes) % 2 == 1:
+            # we need to duration
+            try:
+                duration = float(note)
+                duration = int(duration * default_duration)
+                outnotes.append(chr(duration))
+                continue
+            except ValueError:
+                outnotes.append(chr(default_duration))
+        octave = 0
+        if note.startswith('+'):
+            octave = note.count('+')
+        elif note.startswith('-'):
+            octave = -1 * note.count('-')
+        note = note[abs(octave):].lower()
+        octave += octave_bias
+        basenote_num = rmb_cfg.NOTES[note]
+        note_num = basenote_num + octavelen * octave
+        outnotes.append(chr(note_num))
+
+    if len(outnotes) % 2 == 1:
+        outnotes.append(chr(default_duration))
+
+    return outnotes
