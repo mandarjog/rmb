@@ -1,8 +1,18 @@
 import rmb
+import serial.tools.list_ports
 
 
 def test_script():
-    rm = rmb.Roomba("/dev/ttyUSB0", verbose=True)
+    comp = serial.tools.list_ports.comports()
+    ll = [l for l in comp if "UART" in l[1] or "UART" in l[2]]
+    if len(ll) > 0:
+        dev = ll[0][0]
+        print "Found ", dev
+    else:
+        print "No suitable serial port available"
+        return -1
+
+    rm = rmb.Roomba(dev, verbose=True)
     cmds = [
         "sensors",
         "play,1",
